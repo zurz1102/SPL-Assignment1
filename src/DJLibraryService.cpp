@@ -1,3 +1,4 @@
+
 #include "DJLibraryService.h"
 #include "SessionFileParser.h"
 #include "MP3Track.h"
@@ -16,6 +17,7 @@ DJLibraryService::DJLibraryService(const Playlist& playlist)
     DJLibraryService::~DJLibraryService() {
         for (AudioTrack* track : library) {
             delete track;
+            track = nullptr;
         }
         library.clear();
     }
@@ -50,8 +52,9 @@ DJLibraryService::DJLibraryService(const Playlist& playlist)
         if (track != nullptr) {
             library.push_back(track);
         }
-        std::cout << "[INFO] Track library built: " << library.size() << " tracks loaded" << std::endl;
+        
     }
+    std::cout << "[INFO] Track library built: " << library.size() << " tracks loaded" << std::endl;
 }
 
 /**
@@ -100,7 +103,7 @@ void DJLibraryService::loadPlaylistFromIndices(const std::string& playlist_name,
     playlist = Playlist(playlist_name);
     int track_count = 0;
     for (int index : track_indices) {
-        if (index < 1 || index > (int)library.size()) {
+        if (index < 1 || static_cast<size_t>(index) > library.size()) {
             std::cout << "[WARNING] Invalid track index: " << index << std::endl;
             continue; 
         }
@@ -115,8 +118,8 @@ void DJLibraryService::loadPlaylistFromIndices(const std::string& playlist_name,
         clone->analyze_beatgrid();
         playlist.add_track(clone);
         track_count++;
-        std::cout << "[INFO] Playlist loaded: "<< playlist_name << " ("<< track_count << " tracks)" << std::endl;
     }
+    std::cout << "[INFO] Playlist loaded: "<< playlist_name << " ("<< track_count << " tracks)" << std::endl;
 }
 /**
  * TODO: Implement getTrackTitles method
@@ -126,11 +129,15 @@ std::vector<std::string> DJLibraryService::getTrackTitles() const {
     // Your implementation here
     std::vector<std::string> track_titles;
     std::vector<AudioTrack*> tracks = playlist.getTracks();
+
     for (AudioTrack* track : tracks) {
-    if (track != nullptr) {
-        track_titles.push_back(track->get_title());
+        if (track != nullptr) {
+            track_titles.push_back(track->get_title());
+        }
     }
+
     return track_titles;
+    
 }
 
-}
+

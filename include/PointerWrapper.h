@@ -39,6 +39,7 @@ public:
      */
     ~PointerWrapper() {
         delete ptr;
+        ptr = nullptr;
     };
 
     // ========== COPY OPERATIONS (DELETED) ==========
@@ -62,8 +63,9 @@ public:
      * HINT: How should ownership transfer from one wrapper to another?
      * What should happen to the source wrapper after the move?
      */
-    PointerWrapper(PointerWrapper&& other) noexcept {
-        ptr = other.ptr;
+    PointerWrapper(PointerWrapper&& other) noexcept  : 
+    ptr(other.ptr)
+    {
         other.ptr = nullptr;
     }
 

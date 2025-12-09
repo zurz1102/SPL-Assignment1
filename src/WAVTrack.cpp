@@ -35,10 +35,9 @@ void WAVTrack::analyze_beatgrid() {
     // 3. Print number of beats and mention uncompressed precision
     // should print "  → Estimated beats: <beats>  → Precision factor: 1.0 (uncompressed audio)"
      // 1. חישוב מספר הביטים המשוער
-    double beats = (static_cast<double>(duration_seconds) / 60.0) * bpm;
-    int beats_int = static_cast<int>(beats);
-    std::cout << "  → Estimated beats: " << beats_int
-              << "  → Precision factor: 1.0 (uncompressed audio)\n";
+    int beats = (static_cast<double>(duration_seconds) / 60.0) * bpm;
+    //int beats_int = static_cast<int>(beats);
+    std::cout << "  → Estimated beats: " << beats << "  → Precision factor: 1 (uncompressed audio)\n";
 }
 
 double WAVTrack::get_quality_score() const {
@@ -46,6 +45,7 @@ double WAVTrack::get_quality_score() const {
     // NOTE: Use exactly 2 spaces before each arrow (→) character
     // NOTE: Cast beats to integer when printing
     // Replace with your implementation
+    
     double score = 70.0;
     if (sample_rate >= 44100) {
          
@@ -64,6 +64,9 @@ double WAVTrack::get_quality_score() const {
         score = 100.0;
     }
     return score;
+     std::cout << "[WAVTrack::get_quality_score] \"" << title
+              << "\" score = " << score << "/100" << std::endl;
+    std::cout << score << std::endl;
 }
 
 PointerWrapper<AudioTrack> WAVTrack::clone() const {

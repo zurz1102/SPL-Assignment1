@@ -23,6 +23,10 @@ struct PlaylistNode {
     ~PlaylistNode() {
         delete track;
     }
+
+    private:
+    PlaylistNode(const PlaylistNode&);
+    PlaylistNode& operator=(const PlaylistNode&);
 };
 
 class Playlist {
@@ -41,6 +45,10 @@ public:
      * Destructor
      */
     ~Playlist();
+    Playlist(const Playlist& other);
+    Playlist& operator=(const Playlist& other);
+    Playlist(Playlist&& other) noexcept;
+    Playlist& operator=(Playlist&& other) noexcept;
 
     /**
      * Add a track to the playlist
