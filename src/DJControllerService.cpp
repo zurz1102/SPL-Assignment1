@@ -12,24 +12,34 @@ DJControllerService::DJControllerService(size_t cache_size)
 int DJControllerService::loadTrackToCache(AudioTrack& track) {
     // Your implementation here 
    std::string title = track.get_title();
-   if(cache.contains(track.get_title())) {
-        cache.get(title); 
+   if(cache.contains(title)) {
+        cache.get(title);
+        #ifdef DEBUG
+        std::cout << "[Cache HIT] '" << title << "' found in cache.\n";
+        #endif
+        displayCacheStatus(); 
         return 1;
    }
    PointerWrapper<AudioTrack> wrapper = track.clone();
-   AudioTrack* rawPtr = wrapper.release();
-   if(rawPtr == nullptr) {
-        std::cerr << "[ERROR] Failed to clone track \"" << title << "\"\n";
+   if(!wrapper.get()){
+        std::cerr << "[ERROR] Track: \"" << track.get_title() 
+                  << "\" failed to clone" << std::endl;
         return 0;
-   }
-   rawPtr->load();
-   rawPtr->analyze_beatgrid();
-   PointerWrapper<AudioTrack> preparedClone(rawPtr);
-   bool eviction = cache.put(std::move(preparedClone));
-   if(eviction) {
-    return -1;
-   }
-   return 0;
+    }
+   wrapper->load();
+   wrapper->analyze_beatgrid();
+   std::string wrapper_title = wrapper->get_title();
+    bool is_evicted = cache.put(std::move(wrapper));
+    #ifdef DEBUG
+    std::cout << "[Cache INSERT] Added '" << wrapper_title << "' to cache." << std::endl;
+    if(is_evicted){
+        std::cout << "[Cache MISS] (with eviction)\n";
+    } else {
+        std::cout << "[Cache MISS]\n";
+    }
+    #endif
+    displayCacheStatus();
+    return is_evicted ? -1 : 0;
 }
 
 void DJControllerService::set_cache_size(size_t new_size) {

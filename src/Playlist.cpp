@@ -2,6 +2,7 @@
 #include "AudioTrack.h"
 #include <iostream>
 #include <algorithm>
+#define DEBUG
 Playlist::Playlist(const std::string& name) 
     : head(nullptr), playlist_name(name), track_count(0) {
     std::cout << "Created playlist: " << name << std::endl;
@@ -10,9 +11,8 @@ Playlist::Playlist(const std::string& name)
 // Students must fix this in Phase 1
 Playlist::~Playlist() {
     #ifdef DEBUG
-    std::cout << "Destroying playlist: " << playlist_name << std::endl;
+    //std::cout << "Destroying playlist: " << playlist_name << std::endl;
     #endif
-
     PlaylistNode* current = head;
     while (current != nullptr) {
         PlaylistNode* next = current->next;
@@ -23,37 +23,116 @@ Playlist::~Playlist() {
     track_count = 0;
 }
 
+Playlist::Playlist(const Playlist& other)
+    : head(nullptr),
+      playlist_name(other.playlist_name),
+      track_count(0)
+{
+    PlaylistNode* current_src = other.head;
+    PlaylistNode** tail = &head;  
+
+    while (current_src) {
+        AudioTrack* newTrack = nullptr;
+        if (current_src->track) {
+            auto cloned = current_src->track->clone();  
+            newTrack = cloned.release();                
+        }
+        PlaylistNode* newNode = new PlaylistNode(newTrack);
+        newNode->next = nullptr;
+        *tail = newNode;            
+        tail = &newNode->next;       
+        ++track_count;
+        current_src = current_src->next;
+    }
+}
+
+Playlist& Playlist::operator=(const Playlist& other) {
+    if (this == &other) {
+        return *this;
+    }
+    PlaylistNode* current = head;
+    while (current) {
+        PlaylistNode* next = current->next;
+        delete current;      
+        current = next;
+    }
+    head = nullptr;
+    track_count = 0;
+    playlist_name = other.playlist_name;
+    PlaylistNode* current_src = other.head;
+    PlaylistNode** tail = &head;
+    while (current_src) {
+        AudioTrack* newTrack = nullptr;
+        if (current_src->track) {
+            auto cloned = current_src->track->clone();
+            newTrack = cloned.release();
+        }
+        PlaylistNode* newNode = new PlaylistNode(newTrack);
+        newNode->next = nullptr;
+        *tail = newNode;
+        tail = &newNode->next;
+        ++track_count;
+        current_src = current_src->next;
+    }
+    return *this;
+}
+
+Playlist::Playlist(Playlist&& other) noexcept
+    : head(other.head),
+      playlist_name(std::move(other.playlist_name)),
+      track_count(other.track_count)
+    {
+        other.head = nullptr;
+        other.track_count = 0;
+    }
+
+Playlist& Playlist::operator=(Playlist&& other) noexcept {
+    if (this == &other) {
+        return *this;
+    }
+    PlaylistNode* current = head;
+    while (current) {
+        PlaylistNode* next = current->next;
+        delete current;
+        current = next;
+    }
+    head = other.head;
+    playlist_name = std::move(other.playlist_name);
+    track_count = other.track_count;
+    other.head = nullptr;
+    other.track_count = 0;
+    return *this;
+}
+
 
 void Playlist::add_track(AudioTrack* track) {
-    if (!track) {
+     if (!track) {
         std::cout << "[Error] Cannot add null track to playlist" << std::endl;
         return;
     }
-
-    // Create new node - this allocates memory!
     PlaylistNode* new_node = new PlaylistNode(track);
-
-    // Add to front of list
-    new_node->next = head;
-    head = new_node;
-    track_count++;
-
-    std::cout << "Added '" << track->get_title() << "' to playlist '" 
-              << playlist_name << "'" << std::endl;
+    if (!head) {
+        head = new_node;
+    } else {
+        PlaylistNode* current = head;
+        while (current->next) {
+            current = current->next;
+        }
+        current->next = new_node;
+    }
+    ++track_count;
+    std::cout << "Added '" << track->get_title() << "' to playlist '"<< playlist_name << "'" << std::endl;
 }
 
 void Playlist::remove_track(const std::string& title) {
     PlaylistNode* current = head;
     PlaylistNode* prev = nullptr;
-
-    // Find the track to remove
     while (current && current->track->get_title() != title) {
         prev = current;
         current = current->next;
     }
 
     if (current) {
-        // Remove from linked list
         if (prev) {
             prev->next = current->next;
         } else {
